@@ -1,0 +1,21 @@
+{
+  "name": "creator-royalty-marketplace",
+  "version": "1.0.0",
+  "description": "Hardhat project for Creator NFT with royalties",
+  "main": "index.js",
+  "scripts": {
+    "test": "hardhat test"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.9.6"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "chai": "^4.3.7",
+    "ethereum-waffle": "^3.4.4",
+    "hardhat": "^2.26.2",
+    "mocha": "^10.2.0"
+  }
+}
