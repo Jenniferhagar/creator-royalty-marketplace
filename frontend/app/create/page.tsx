@@ -2,9 +2,8 @@
 import React, { useState } from "react";
 import { ethers } from "ethers";
 import CreatorNFT from "../../constants/abi/CreatorNFT.json";
+import { NFT_ADDRESS } from "../../constants/index.js";
 
-// 👇 update if you redeploy
-const CREATOR_NFT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 
 export default function CreatePage() {
     const [name, setName] = useState("");
@@ -68,10 +67,11 @@ export default function CreatePage() {
             const from = await signer.getAddress();
 
             const contract = new ethers.Contract(
-                CREATOR_NFT_ADDRESS,
-                CreatorNFT as any,
+                NFT_ADDRESS,
+                (CreatorNFT as any).abi ?? (CreatorNFT as any),
                 signer
             );
+
 
             setStatus("Sending transaction…");
             const tx = await (contract as any).mintNFT(from, tokenURI);

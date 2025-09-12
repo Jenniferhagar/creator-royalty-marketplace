@@ -3,9 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import CreatorNFT from "../../constants/abi/CreatorNFT.json";
-
-// 👇 update if you redeploy
-const CREATOR_NFT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+import { NFT_ADDRESS } from "../../constants/index.js";
 
 // helper to turn ipfs:// into an http gateway URL
 function ipfsToHttp(uri?: string) {
@@ -46,8 +44,8 @@ export default function Page() {
 
                 // Contract (read-only is fine)
                 const contract = new ethers.Contract(
-                    CREATOR_NFT_ADDRESS,
-                    CreatorNFT as any,
+                    NFT_ADDRESS,
+                    (CreatorNFT as any).abi ?? (CreatorNFT as any),
                     provider
                 );
 
