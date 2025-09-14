@@ -226,13 +226,15 @@ export default function MarketplacePage() {
                             <img
                                 src={ipfsToHttp(l.image)}
                                 alt={l.name || `NFT #${l.id}`}
-                                className="h-40 w-full object-cover rounded-xl"
+                                className="w-full h-64 object-contain rounded-xl bg-black"
                             />
+
                         ) : (
-                            <div className="h-40 w-full rounded-xl bg-zinc-800 flex items-center justify-center text-zinc-400">
+                            <div className="w-full h-64 bg-zinc-800 flex items-center justify-center text-zinc-400 rounded-xl">
                                 No Image
                             </div>
                         )}
+
 
                         <div className="mt-4">
                             <div className="font-semibold">{l.name || `NFT #${l.id}`}</div>

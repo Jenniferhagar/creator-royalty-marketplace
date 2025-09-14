@@ -119,9 +119,10 @@ export default function MyNFTsPage() {
                             <img
                                 src={ipfsToHttp(nft.image)}
                                 alt={nft.name || `NFT #${nft.tokenId}`}
-                                className="w-full h-48 object-cover rounded-lg"
+                                className="w-full h-64 object-contain rounded-xl bg-black"
                             />
                         ) : (
+
                             <div className="h-48 w-full bg-zinc-800 flex items-center justify-center text-zinc-400 rounded-lg">
                                 No Image
                             </div>
