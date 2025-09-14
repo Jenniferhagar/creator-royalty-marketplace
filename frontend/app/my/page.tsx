@@ -5,7 +5,7 @@ import { ethers } from "ethers";
 import CreatorNFT from "../../constants/abi/CreatorNFT.json";
 import { NFT_ADDRESS } from "../../constants/index.js";
 
-// helper to turn ipfs:// into an http gateway URL
+// convert ipfs:// → gateway URL
 function ipfsToHttp(uri?: string) {
     if (!uri) return "";
     return uri.startsWith("ipfs://")
@@ -22,14 +22,14 @@ type NFT = {
     animation_url?: string;
 };
 
-export default function Page() {
+export default function MyNFTsPage() {
     const [nfts, setNfts] = useState<NFT[]>([]);
     const [status, setStatus] = useState<string>("");
 
     useEffect(() => {
         (async () => {
             try {
-                setStatus("Connecting wallet…");
+                setStatus("🔗 Connecting wallet…");
 
                 const { ethereum } = window as any;
                 if (!ethereum) {
@@ -42,24 +42,30 @@ export default function Page() {
                 const signer = provider.getSigner();
                 const owner = await signer.getAddress();
 
-                // Contract (read-only is fine)
+                // contract instance
                 const contract = new ethers.Contract(
                     NFT_ADDRESS,
                     (CreatorNFT as any).abi ?? (CreatorNFT as any),
                     provider
                 );
 
-                setStatus("Reading your mints…");
+                setStatus("📦 Reading your NFTs…");
 
-                // 🔎 Instead of tokenOfOwnerByIndex, scan Transfer(to = owner) logs
+                // query Transfer logs to detect owned tokenIds
                 const filter = contract.filters.Transfer(null, owner);
                 const toBlock = await provider.getBlockNumber();
-                // start from block 0 on local chains; adjust as needed in prod
                 const logs = await contract.queryFilter(filter, 0, toBlock);
 
-                const tokenIds = [...new Set(logs.map((l) => (l.args as any).tokenId.toString()))];
+                const tokenIds = [
+                    ...new Set(logs.map((l) => (l.args as any).tokenId.toString())),
+                ];
 
-                setStatus(tokenIds.length ? "Fetching metadata…" : "No NFTs found for this wallet.");
+                if (!tokenIds.length) {
+                    setStatus("You don’t own any NFTs yet.");
+                    return;
+                }
+
+                setStatus("📑 Fetching metadata…");
 
                 const out: NFT[] = [];
                 for (const tid of tokenIds) {
@@ -67,7 +73,6 @@ export default function Page() {
                     try {
                         tokenURI = await (contract as any).tokenURI(tid);
                     } catch {
-                        // if tokenURI is missing, skip
                         continue;
                     }
 
@@ -76,7 +81,7 @@ export default function Page() {
                         const res = await fetch(ipfsToHttp(tokenURI));
                         meta = await res.json();
                     } catch {
-                        // keep going even if metadata fetch fails
+                        // ignore fetch errors
                     }
 
                     out.push({
@@ -90,7 +95,7 @@ export default function Page() {
                 }
 
                 setNfts(out);
-                setStatus(out.length ? "" : "No NFTs found for this wallet.");
+                setStatus("");
             } catch (err: any) {
                 console.error(err);
                 setStatus(`❌ Error: ${err?.message || String(err)}`);
@@ -108,42 +113,45 @@ export default function Page() {
                 {nfts.map((nft) => (
                     <div
                         key={nft.tokenId}
-                        className="rounded-2xl overflow-hidden bg-zinc-900/60 border border-white/10"
+                        className="rounded-2xl overflow-hidden bg-zinc-900/60 border border-white/10 p-4"
                     >
-                        {/* image (if present) */}
                         {nft.image ? (
                             <img
                                 src={ipfsToHttp(nft.image)}
                                 alt={nft.name || `NFT #${nft.tokenId}`}
-                                className="w-full h-56 object-cover"
+                                className="w-full h-48 object-cover rounded-lg"
                             />
                         ) : (
-                            <div className="h-56 w-full bg-zinc-800 flex items-center justify-center text-zinc-400">
+                            <div className="h-48 w-full bg-zinc-800 flex items-center justify-center text-zinc-400 rounded-lg">
                                 No Image
                             </div>
                         )}
 
-                        <div className="p-4">
+                        <div className="mt-4">
                             <h2 className="font-semibold">{nft.name || `NFT #${nft.tokenId}`}</h2>
+                            <p className="text-xs text-zinc-400">Token #{nft.tokenId}</p>
                             {nft.description && (
-                                <p className="text-sm text-zinc-400">{nft.description}</p>
+                                <p className="text-sm text-zinc-400 mt-1">{nft.description}</p>
                             )}
 
-                            {/* NEW: show media link if exists */}
-                            {!!nft.animation_url && (
-                                <a
-                                    href={ipfsToHttp(nft.animation_url)}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-fuchsia-400 underline text-sm block mt-2"
-                                >
-                                    ▶ View Media
-                                </a>
+                            {/* audio / video playback */}
+                            {nft.animation_url && (
+                                <div className="mt-3">
+                                    {nft.animation_url.endsWith(".mp4") ? (
+                                        <video
+                                            controls
+                                            className="w-full rounded-lg"
+                                            src={ipfsToHttp(nft.animation_url)}
+                                        />
+                                    ) : (
+                                        <audio
+                                            controls
+                                            className="w-full"
+                                            src={ipfsToHttp(nft.animation_url)}
+                                        />
+                                    )}
+                                </div>
                             )}
-
-                            <p className="text-xs text-zinc-500 break-all mt-3">
-                                {nft.tokenURI}
-                            </p>
                         </div>
                     </div>
                 ))}
