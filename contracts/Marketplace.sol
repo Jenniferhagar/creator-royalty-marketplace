@@ -92,6 +92,17 @@ contract Marketplace is ReentrancyGuard, Ownable {
             "NOT_APPROVED"
         );
 
+        // 🚨 Prevent duplicate active listings for the same NFT
+        for (uint256 i = 1; i <= nextListingId; i++) {
+            if (
+                listings[i].active &&
+                listings[i].nft == nft &&
+                listings[i].tokenId == tokenId
+            ) {
+                revert("ALREADY_LISTED");
+            }
+        }
+
         listingId = ++nextListingId;
         listings[listingId] = Listing({
             nft: nft,

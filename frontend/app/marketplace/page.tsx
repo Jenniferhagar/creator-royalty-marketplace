@@ -111,24 +111,21 @@ export default function MarketplacePage() {
     const handleList = async () => {
         try {
             if (!tokenId || !price) {
-                setStatus("❌ Please enter Token ID and price.");
+                setStatus("⚠️ Token ID and price required.");
                 return;
             }
 
-            const provider = new ethers.providers.Web3Provider(
-                (window as any).ethereum,
-                "any"
-            );
+            const provider = new ethers.providers.Web3Provider((window as any).ethereum);
             const signer = provider.getSigner();
 
             const market = new ethers.Contract(MARKET_ADDRESS, MARKET_ABI, signer);
             const nft = new ethers.Contract(NFT_ADDRESS, CreatorNFT, signer);
 
-            // approve marketplace
+            // Step 1: Approve marketplace
             const approveTx = await nft.approve(MARKET_ADDRESS, tokenId);
             await approveTx.wait();
 
-            // list item
+            // Step 2: List NFT
             const tx = await market.listItem(
                 NFT_ADDRESS,
                 tokenId,
@@ -140,12 +137,52 @@ export default function MarketplacePage() {
             setTokenId("");
             setPrice("");
 
-            await loadListings(provider);
+            // Refresh listings
+            const next = await market.nextListingId();
+            const out: any[] = [];
+            for (let i = 1; i <= Number(next); i++) {
+                const l = await market.listings(i);
+                if (l.active) {
+                    let meta: any = {};
+                    try {
+                        const tokenURI = await nft.tokenURI(l.tokenId);
+                        const res = await fetch(ipfsToHttp(tokenURI));
+                        meta = await res.json();
+                    } catch { /* ignore */ }
+
+                    out.push({
+                        id: i,
+                        tokenId: l.tokenId.toString(),
+                        seller: l.seller,
+                        price: ethers.utils.formatEther(l.price),
+                        name: meta?.name,
+                        image: meta?.image,
+                        animation_url: meta?.animation_url,
+                    });
+                }
+            }
+            setListings(out);
+
         } catch (err: any) {
-            console.error(err);
-            setStatus(`❌ Listing failed: ${err.message || String(err)}`);
+            let reason = "❌ Listing failed.";
+            const raw = err?.reason || err?.message || JSON.stringify(err);
+
+            if (raw.includes("ALREADY_LISTED")) {
+                reason = "❌ Already listed.";
+            } else if (raw.includes("PRICE_ZERO")) {
+                reason = "❌ Price must be greater than zero.";
+            } else if (raw.includes("NOT_OWNER")) {
+                reason = "❌ You don’t own this token.";
+            } else if (raw.includes("NOT_APPROVED")) {
+                reason = "❌ Approve the NFT to the marketplace first.";
+            } else {
+                reason = `❌ ${raw}`;
+            }
+
+            setStatus(reason);
         }
     };
+
 
     return (
         <main className="mx-auto max-w-6xl px-4 py-12">
