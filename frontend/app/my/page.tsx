@@ -122,37 +122,48 @@ export default function MyNFTsPage() {
                                 className="w-full h-64 object-contain rounded-xl bg-black"
                             />
                         ) : (
-
                             <div className="h-48 w-full bg-zinc-800 flex items-center justify-center text-zinc-400 rounded-lg">
                                 No Image
                             </div>
                         )}
 
                         <div className="mt-4">
-                            <h2 className="font-semibold">{nft.name || `NFT #${nft.tokenId}`}</h2>
+                            <h2 className="font-semibold">
+                                {nft.name || `NFT #${nft.tokenId}`}
+                            </h2>
                             <p className="text-xs text-zinc-400">Token #{nft.tokenId}</p>
                             {nft.description && (
                                 <p className="text-sm text-zinc-400 mt-1">{nft.description}</p>
                             )}
 
-                            {/* audio / video playback */}
-                            {nft.animation_url && (
-                                <div className="mt-3">
-                                    {nft.animation_url.endsWith(".mp4") ? (
-                                        <video
-                                            controls
-                                            className="w-full rounded-lg"
-                                            src={ipfsToHttp(nft.animation_url)}
-                                        />
-                                    ) : (
-                                        <audio
-                                            controls
-                                            className="w-full"
-                                            src={ipfsToHttp(nft.animation_url)}
-                                        />
-                                    )}
-                                </div>
-                            )}
+                            {/* media preview */}
+                            <div className="mt-3">
+                                {nft.animation_url ? (
+                                    <>
+                                        <video controls playsInline className="w-full rounded-lg mb-2">
+                                            <source src={ipfsToHttp(nft.animation_url || "")} type="video/mp4" />
+                                            Your browser does not support the video tag.
+                                        </video>
+
+                                        {/* Always show this helper text + link */}
+                                        <div className="text-xs text-zinc-400">
+                                            ⚠️ If nothing plays, this file may not be a valid video.
+                                            <a
+                                                href={ipfsToHttp(nft.animation_url || "")}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="underline text-purple-400 ml-1"
+                                            >
+                                                Open file
+                                            </a>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <span className="text-zinc-400">No media attached</span>
+                                )}
+                            </div>
+
+
                         </div>
                     </div>
                 ))}

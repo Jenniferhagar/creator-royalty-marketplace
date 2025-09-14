@@ -54,6 +54,7 @@ export default function MarketplacePage() {
                     const tokenURI = await nft.tokenURI(l.tokenId);
                     const res = await fetch(ipfsToHttp(tokenURI));
                     meta = await res.json();
+                    console.log("Metadata for token", l.tokenId.toString(), meta);
                 } catch (err) {
                     console.warn("Metadata fetch failed:", err);
                 }
@@ -65,13 +66,15 @@ export default function MarketplacePage() {
                     price: ethers.utils.formatEther(l.price),
                     name: meta?.name,
                     description: meta?.description,
-                    image: meta?.image,
-                    animation_url: meta?.animation_url,
+                    image: meta?.image ? ipfsToHttp(meta.image) : undefined,
+                    animation_url: meta?.animation_url
+                        ? ipfsToHttp(meta.animation_url)
+                        : undefined,
                 });
             }
 
-
             setListings(out);
+            console.log("Listings in state:", out);
         } catch (err) {
             console.error("Failed to load listings:", err);
         }
@@ -97,8 +100,6 @@ export default function MarketplacePage() {
                 const next = await market.nextListingId();
                 console.log("nextListingId from contract:", next.toString());
 
-
-
                 await loadListings(provider);
             } catch (err: any) {
                 console.error(err);
@@ -115,7 +116,9 @@ export default function MarketplacePage() {
                 return;
             }
 
-            const provider = new ethers.providers.Web3Provider((window as any).ethereum);
+            const provider = new ethers.providers.Web3Provider(
+                (window as any).ethereum
+            );
             const signer = provider.getSigner();
 
             const market = new ethers.Contract(MARKET_ADDRESS, MARKET_ABI, signer);
@@ -148,7 +151,9 @@ export default function MarketplacePage() {
                         const tokenURI = await nft.tokenURI(l.tokenId);
                         const res = await fetch(ipfsToHttp(tokenURI));
                         meta = await res.json();
-                    } catch { /* ignore */ }
+                    } catch {
+                        /* ignore */
+                    }
 
                     out.push({
                         id: i,
@@ -162,7 +167,7 @@ export default function MarketplacePage() {
                 }
             }
             setListings(out);
-
+            console.log("Listings in state:", out);
         } catch (err: any) {
             let reason = "❌ Listing failed.";
             const raw = err?.reason || err?.message || JSON.stringify(err);
@@ -182,7 +187,6 @@ export default function MarketplacePage() {
             setStatus(reason);
         }
     };
-
 
     return (
         <main className="mx-auto max-w-6xl px-4 py-12">
@@ -228,13 +232,11 @@ export default function MarketplacePage() {
                                 alt={l.name || `NFT #${l.id}`}
                                 className="w-full h-64 object-contain rounded-xl bg-black"
                             />
-
                         ) : (
                             <div className="w-full h-64 bg-zinc-800 flex items-center justify-center text-zinc-400 rounded-xl">
                                 No Image
                             </div>
                         )}
-
 
                         <div className="mt-4">
                             <div className="font-semibold">{l.name || `NFT #${l.id}`}</div>
@@ -244,23 +246,35 @@ export default function MarketplacePage() {
                             <div className="text-sm font-medium mb-2">{l.price} ETH</div>
 
                             {/* media preview */}
-                            {l.animation_url && (
-                                <div>
-                                    {l.animation_url.endsWith(".mp4") ? (
+                            <div className="mt-2">
+                                {l.animation_url ? (
+                                    <>
                                         <video
                                             controls
-                                            className="w-full rounded-lg"
-                                            src={ipfsToHttp(l.animation_url)}
-                                        />
-                                    ) : (
-                                        <audio
-                                            controls
-                                            className="w-full"
-                                            src={ipfsToHttp(l.animation_url)}
-                                        />
-                                    )}
-                                </div>
-                            )}
+                                            playsInline
+                                            className="w-full rounded-lg mb-2"
+                                        >
+                                            <source
+                                                src={ipfsToHttp(l.animation_url)}
+                                                type="video/mp4"
+                                            />
+                                            Your browser does not support the video tag.
+                                        </video>
+
+                                        {/* Fallback link in case video doesn’t play */}
+                                        <a
+                                            href={ipfsToHttp(l.animation_url)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-sm text-purple-400 underline"
+                                        >
+                                            Open media file
+                                        </a>
+                                    </>
+                                ) : (
+                                    <span className="text-zinc-400">No media attached</span>
+                                )}
+                            </div>
                         </div>
                     </div>
                 ))}

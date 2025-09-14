@@ -182,9 +182,10 @@ export default function CreatePage() {
 
     return (
         <main className="mx-auto max-w-3xl px-4 py-12">
-            <h1 className="text-3xl font-bold mb-6">Mint NFT</h1>
+            <h1 className="text-3xl font-bold mb-0">Mint NFT</h1>
+            <h2 className="text-2xl font-bold">(Only .mp4 video files will playback in marketplace)</h2>
 
-            <form onSubmit={handleMint} className="space-y-6">
+            <form onSubmit={handleMint} className="space-y-6 mt-6">
                 {/* Name */}
                 <div>
                     <label className="block text-sm mb-1">Name (optional)</label>
@@ -207,12 +208,17 @@ export default function CreatePage() {
                 />
 
                 {imagePreview && (
-                    <img
-                        src={imagePreview}
-                        alt="Preview"
-                        className="mt-2 h-40 w-full object-cover rounded"
-                    />
+                    <div className="mt-2 w-full flex justify-center">
+                        <img
+                            src={imagePreview}
+                            alt="Preview"
+                            className="max-w-full max-h-60 h-auto rounded-lg border border-zinc-700"
+                        />
+                    </div>
                 )}
+
+
+
 
                 {/* Audio/Video (optional) */}
                 <FileField
