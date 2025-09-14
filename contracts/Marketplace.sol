@@ -16,6 +16,7 @@ import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 contract Marketplace is ReentrancyGuard, Ownable {
     // Fee cap (e.g., 1000 = 10%)
     uint96 public constant MAX_FEE_BPS = 1000;
+    uint256 public nextId = 1;
 
     // Platform settings (set after deploy via setPlatform)
     address public platformTreasury;
